@@ -28,7 +28,6 @@ class Temple(Entity):
         self.plate3_required_time = 3
         self.plate_check_timer = 0
 
-        # Ușa templului (sus la început)
         self.door = Entity(
             model='cube',
             texture='assets/textures/gate_texture.jpg',
@@ -41,7 +40,7 @@ class Temple(Entity):
         self.trigger_position = Vec3(5.5, 1.5, -8)
         self.trigger_radius = 3
 
-        # Debug vizual (poți ascunde după test)
+
         self.debug_trigger = Entity(
             model='sphere',
             scale=self.trigger_radius*2,
@@ -50,8 +49,8 @@ class Temple(Entity):
             visible=True
         )
 
-        # viteza de coborâre a ușii
-        self.door_speed = 8  # unități pe secundă
+
+        self.door_speed = 8
 
         self.build_floor()
         self.build_walls()
@@ -71,6 +70,7 @@ class Temple(Entity):
             texture='assets/textures/temple_floor_texture.jpg',
             texture_scale=(15, 15),
             collider='box',
+            receive_shadows=True
         )
     def build_walls(self):
         self.front_left_wall = Entity(
@@ -80,6 +80,8 @@ class Temple(Entity):
             position=(11, wall_height/2, -5),
             texture='assets/textures/wall_texture.jpg',
             collider='box',
+            cast_shadows=True,
+            receive_shadows=True
 
         )
         self.front_right_wall = Entity(
@@ -88,7 +90,9 @@ class Temple(Entity):
             scale=(11, wall_height, 1),
             position=(-2, wall_height/2, -5),
             texture='assets/textures/wall_texture.jpg',
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
         self.front_top_wall = Entity(
             parent=self,
@@ -96,7 +100,9 @@ class Temple(Entity):
             scale=(2, wall_height-8, 1),
             position=(4.5, 11, -5),
             texture='assets/textures/wall_texture.jpg',
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
         self.first_side_wall = Entity(
             parent=self,
@@ -105,7 +111,9 @@ class Temple(Entity):
             position=(5- temple_width/2, wall_height/2, -15),
             texture='assets/textures/wall_texture.jpg',
             texture_scale=(1, 6),
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
         self.second_side_wall = Entity(
             parent=self,
@@ -114,7 +122,9 @@ class Temple(Entity):
             position=(4.5+ temple_width/2, wall_height/2, -15),
             texture='assets/textures/wall_texture.jpg',
             texture_scale=(1, 6),
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
         self.back_wall = Entity(
             parent=self,
@@ -123,7 +133,9 @@ class Temple(Entity):
             position=(17-temple_length/2, wall_height/2, -26),
             texture='assets/textures/wall_texture.jpg',
             texture_scale=(1, 6),
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
         self.ceiling = Entity(
             parent=self,
@@ -132,7 +144,9 @@ class Temple(Entity):
             position=(5, wall_height-1, -15),
             texture='assets/textures/ceiling_texture.jpg',
             texture_scale=(10,10),
-            collider='box'
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
         )
     def build_roof(self):
         for i in range(5):
@@ -150,17 +164,20 @@ class Temple(Entity):
         for x in x_positions:
             for z in z_positions:
                 Entity(
-                    parent=self,  # important! rămâne copil al templului
+                    parent=self,
                     model='assets/3d_models/Pillar.glb',
                     scale=0.16,
-                    origin_y=0,  # baza coloanei pe podea
-                    position=(x, 0, z),  # poziție relativă la templu
+                    origin_y=0,
+                    position=(x, 0, z),
                     collider='box',
+                    cast_shadows=True,
+                    receive_shadows=True
                 )
 
 
     def build_torches(self):
-        self.torches = []  # Store all torches in a list
+        self.torches = []
+        self.torch_lights = []
 
         torch_positions = [(0, 0, -5), (9, 0, -5)]
 
@@ -171,8 +188,19 @@ class Temple(Entity):
                 scale=5,
                 origin_y=0,
                 position=pos,
+                cast_shadows=True,
+                receive_shadows=True
             )
             self.torches.append(torch)
+
+            light = PointLight(
+                parent=self,
+                color=color.orange,
+                range=8,
+                intensity=5,
+                position = pos
+            )
+            self.torch_lights.append(light)
 
         altar_torches_positions = [(3, 0, -23.7), (6, 0, -23.7)]
         for pos in altar_torches_positions:
@@ -182,9 +210,21 @@ class Temple(Entity):
                 scale=3,
                 origin_y=0,
                 position=pos,
-                rotation=(0,180,0)
+                rotation=(0,180,0),
+                cast_shadows=True,
+                receive_shadows=True
             )
             self.torches.append(torch)
+
+            light = PointLight(
+                parent=self,
+                color=color.orange,
+                range=8,
+                intensity=5,
+                position = pos
+            )
+            self.torch_lights.append(light)
+
 
     def build_pressure_plates(self):
         global first_pressure_plate, second_pressure_plate, third_pressure_plate
@@ -257,7 +297,6 @@ class Temple(Entity):
 
 
     def check_pressure_plates(self):
-        """Check pressure plates separately from main update loop"""
         global pressed_plates, first_pressure_plate, second_pressure_plate
         from ui import update_plates_counter
         plate1_distance = (self.player.position - first_pressure_plate.position).length()

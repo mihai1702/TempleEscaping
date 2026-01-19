@@ -17,7 +17,6 @@ class TorchFire(Entity):
         self.drift = Vec3(uniform(-0.3, 0.3), 1, uniform(-0.3, 0.3))
 
 
-
     def update(self):
         self.position += self.drift * self.speed * time.dt
         self.scale *= 0.6

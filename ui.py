@@ -27,7 +27,6 @@ def show_plates_counter(temple):
         )
 
 def update_plates_counter(count):
-    """Update the pressure plate counter display"""
     global plates_counter_text
 
     if plates_counter_text is not None:
@@ -35,7 +34,6 @@ def update_plates_counter(count):
         print(f'UI Counter updated: {count}/3')
 
 def reset_ui():
-    """Reset all UI elements"""
     global plates_counter_text
     if plates_counter_text:
         destroy(plates_counter_text)

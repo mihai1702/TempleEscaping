@@ -7,7 +7,6 @@ import copy
 player = None
 temple = None
 trees_collection = None
-# pressed_pressure_plates = 0
 
 def start_scene():
     global player, temple, trees_collection
@@ -18,6 +17,10 @@ def start_scene():
 
     sun = DirectionalLight(color=color.rgb(255, 240, 220))
     sun.look_at(Vec3(1, -1, -1))
+    sun.shadow = True
+    sun.shadow_map_resolution = (2048, 2048)
+
+    scene.fog_density = 0
 
     ground = Entity(
         model = 'plane',
@@ -25,6 +28,7 @@ def start_scene():
         texture='assets/textures/grass_texture.jpg',
         texture_scale=(20, 20),
         collider='box',
+        receive_shadows=True
     )
     tree1_model = load_model('assets/3d_models/trees/tree1.glb')
     tree1_model.flattenLight()

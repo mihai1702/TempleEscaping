@@ -294,6 +294,18 @@ class Temple(Entity):
             texture='assets/textures/altar_walls_texture.jpg',
             texture_scale=(2, 2)
         )
+        for pos in [(2.8, -0.8, -24), (7.6, -0.8, -24)]:
+            self.altar_statue = Entity(
+                parent=self,
+                model='assets/3d_models/statue_of_hatshepsut.glb',
+                scale=0.7,
+                position=pos,
+                rotation=(0,180,0),
+                collider='box',
+                cast_shadows=True,
+                receive_shadows=True
+            )
+
 
 
     def check_pressure_plates(self):

@@ -52,7 +52,7 @@ def show_main_menu():
         text='Start',
         color=color.azure,
         scale=(0.4, 0.1),
-        position=(0, 0)
+        position=(-0.25, 0)
     )
     start_button.on_click = start_game
 
@@ -61,9 +61,21 @@ def show_main_menu():
         text='Quit',
         color=color.red,
         scale=(0.4, 0.1),
-        position=(0, -0.2)
+        position=(0.25, 0)
     )
     exit_button.on_click = quit_game
+
+    game_rules = Text(
+        parent=camera.ui,
+        text='Find a way to escape the temple by searching for 3 pressure plates hidden around the temple\nUse mouse to look around and WASD to move\nPress ESC to pause the game',
+        origin=(0, 0),
+        scale=1.5,
+        y=-0.3,
+        background=True,
+        backgroundColor=color.rgba(0, 0, 0, 0.3),
+        z=-0.02
+    )
+
 
 
 def start_game():

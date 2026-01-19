@@ -109,6 +109,21 @@ def start_scene():
         scale=0.008,
         position=(20, 0, 25)
     )
+    bush3_m2 = Entity(
+        model=copy.deepcopy(bush2_model),
+        scale=0.008,
+        position=(-3, 0, 0)
+    )
+    for pos in [(15, -2.9, -3),(-3, -2.9, -3)]:
+        altar_statue = Entity(
+            model='assets/3d_models/statue_of_hatshepsut.glb',
+            scale=1.5,
+            position=pos,
+            rotation=(0, 180, 0),
+            collider='box',
+            cast_shadows=True,
+            receive_shadows=True
+        )
     player = FirstPersonController(
         position=(5, 15, 31),
         speed=8,

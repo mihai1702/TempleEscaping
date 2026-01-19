@@ -7,7 +7,7 @@ import copy
 player = None
 temple = None
 trees_collection = None
-pressed_pressure_plates = 0
+# pressed_pressure_plates = 0
 
 def start_scene():
     global player, temple, trees_collection
@@ -18,14 +18,6 @@ def start_scene():
 
     sun = DirectionalLight(color=color.rgb(255, 240, 220))
     sun.look_at(Vec3(1, -1, -1))
-
-    player = FirstPersonController(
-        position=(5, 15, 31),
-        speed=8,
-        jump_height=1.5,
-        gravity=1
-    )
-    player.rotation_y = 180
 
     ground = Entity(
         model = 'plane',
@@ -113,7 +105,12 @@ def start_scene():
         scale=0.008,
         position=(20, 0, 25)
     )
-
-
+    player = FirstPersonController(
+        position=(5, 15, 31),
+        speed=8,
+        jump_height=1.5,
+        gravity=1
+    )
+    player.rotation_y = 180
 
     temple = Temple(player)

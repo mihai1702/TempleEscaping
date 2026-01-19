@@ -1,5 +1,4 @@
 from ursina import Text, color, destroy
-from objects.temple import pressed_plates
 
 plates_counter_text = None
 
@@ -34,3 +33,22 @@ def update_plates_counter(count):
     if plates_counter_text is not None:
         plates_counter_text.text = f'Pressure Plates: {count}/3'
         print(f'UI Counter updated: {count}/3')
+
+def reset_ui():
+    """Reset all UI elements"""
+    global plates_counter_text
+    if plates_counter_text:
+        destroy(plates_counter_text)
+        plates_counter_text = None
+
+def show_finish_screen():
+    finish_text = Text(
+        text='CONGRATULATIONS!\nYOU ESCAPED THE TEMPLE!',
+        origin=(0,0),
+        position=(0, 0),
+        scale=2,
+        color=color.green,
+        background=True,
+        backgroundColor=color.dark_gray,
+    )
+    destroy(finish_text, delay=5)

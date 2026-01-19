@@ -1,5 +1,11 @@
 from utils import *
-app = Ursina()
+from ursina import *
+
+app = Ursina(
+    title='Temple Escaping',
+    icon='assets/temple_escaping_icon.ico'
+)
+
 
 start_label = None
 start_button = None
@@ -14,6 +20,8 @@ background = None
 game_running = False
 title_bg = None
 
+window.shadow_map_enabled = True
+window.shadow_map_resolution = 2048
 
 def show_main_menu():
     global start_label, start_button, exit_button, background, game_running, title_bg
@@ -27,20 +35,15 @@ def show_main_menu():
         scale=(1.777, 1),
         z=1
     )
-    title_bg = Entity(
-        parent=camera.ui,
-        model='quad',
-        scale=(0.6, 0.15),
-        color = color.rgba(0,0,0,0.3),
-        y=0.3,
-        z=-0.01
-    )
+
     start_label = Text(
         parent=camera.ui,
-        text='Jocul templului',
+        text='Temple Escaping',
         origin=(0, 0),
         scale=3,
         y=0.3,
+        background=True,
+        backgroundColor=color.rgba(0, 0, 0, 0.3),
         z=-0.02
     )
 
@@ -66,6 +69,8 @@ def show_main_menu():
 def start_game():
     global game_running, background, title_bg
     clear_ui()
+
+
     if background:
         destroy(background)
         background = None
@@ -82,28 +87,43 @@ def start_game():
 def show_exit_screen():
     global exit_label, exit_yes_button, exit_no_button, background, game_running
     game_running = False
-    clear_ui()
-    exit_label = Text(
-        text='Ești sigur?',
-        scale=3,
-        y=0.2
-    )
+    mouse.locked = False
 
+    exit_label = Text(
+        text='Are you sure?',
+        scale=3,
+        origin=(0, 0),
+        y=0.2,
+        background=True,
+        backgroundColor=color.rgba(0,0,0,0.3)
+    )
     exit_yes_button = Button(
         text='Exit Game',
-        scale=0.1,
+        scale=(0.4,0.1),
         y=0,
         color=color.red
     )
     exit_yes_button.on_click = application.quit
-
     exit_no_button = Button(
-        text='Start Over',
-        scale=0.1,
+        text='Continue Playing',
+        scale=(0.4,0.1),
         y=-0.2,
-        color=color.azure
+        color=color.rgb(58/255,194/255,0/255)
     )
-    exit_no_button.on_click = show_main_menu
+    exit_no_button.on_click = resume_game
+
+def resume_game():
+    global exit_label, exit_yes_button, exit_no_button, game_running
+
+    if exit_label:
+        exit_label.enabled = False
+    if exit_yes_button:
+        exit_yes_button.enabled = False
+    if exit_no_button:
+        exit_no_button.enabled = False
+
+    mouse.locked = True
+    game_running = True
 
 def quit_game():
     application.quit()
@@ -115,6 +135,13 @@ def input(key):
     if key == 'escape':
         if game_running:
             mouse.locked = False
-            show_exit_screen()
+
+            if exit_label and exit_yes_button and exit_no_button:
+                exit_label.enabled = True
+                exit_yes_button.enabled = True
+                exit_no_button.enabled = True
+            else:
+                show_exit_screen()
+
 
 app.run()

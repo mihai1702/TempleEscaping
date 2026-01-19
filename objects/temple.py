@@ -1,5 +1,6 @@
 from ursina import *
 from objects.torch_fire import TorchFire
+from ui import *
 
 temple_width = 25
 temple_length = 25
@@ -7,11 +8,10 @@ wall_height = 14
 wall_thickness = 1
 
 first_pressure_plate = None
+second_pressure_plate = None
+third_pressure_plate = None
 
 pressed_plates = 0
-plate_1_pressed = False
-plate_2_pressed = False
-plate_3_pressed = False
 
 class Temple(Entity):
     def __init__(self, player):
@@ -19,8 +19,14 @@ class Temple(Entity):
         self.player = player
         self.door_closed = False
         self.fire_timer = 0
+        self.puzzle_solved = False
         self.plate1_pressed = False
-        self.plate_check_timer = 0  # Add timer for pressure plate checks
+        self.plate2_pressed = False
+        self.plate3_pressed = False
+
+        self.plate3_timer = 0
+        self.plate3_required_time = 3
+        self.plate_check_timer = 0
 
         # Ușa templului (sus la început)
         self.door = Entity(
@@ -52,6 +58,8 @@ class Temple(Entity):
         self.build_columns()
         self.build_torches()
         self.build_pressure_plates()
+        self.build_altar()
+        self.build_roof()
 
 
     def build_floor(self):
@@ -72,6 +80,7 @@ class Temple(Entity):
             position=(11, wall_height/2, -5),
             texture='assets/textures/wall_texture.jpg',
             collider='box',
+
         )
         self.front_right_wall = Entity(
             parent=self,
@@ -119,33 +128,41 @@ class Temple(Entity):
         self.ceiling = Entity(
             parent=self,
             model='cube',
-            scale=(26, 1, 26),
-            position=(5, wall_height, -15),
+            scale=(23, 1, 20),
+            position=(5, wall_height-1, -15),
             texture='assets/textures/ceiling_texture.jpg',
+            texture_scale=(10,10),
             collider='box'
         )
-
+    def build_roof(self):
+        for i in range(5):
+            Entity(
+                parent=self,
+                model='cube',
+                scale=(27 - i * 4, 2, 26 - i * 4),
+                position=(5, wall_height + i, -15),
+                texture='assets/textures/roof_texture.jpg'
+            )
     def build_columns(self):
-        z_positions = [-35.5, -28.5, -21.5]
-        x_positions = [-27, -10]
+        z_positions = [-37.5, -30.5, -23.5]
+        x_positions = [-29.5, -12.5]
 
         for x in x_positions:
             for z in z_positions:
                 Entity(
                     parent=self,  # important! rămâne copil al templului
                     model='assets/3d_models/Pillar.glb',
-                    scale=0.14,
+                    scale=0.16,
                     origin_y=0,  # baza coloanei pe podea
                     position=(x, 0, z),  # poziție relativă la templu
-                    collider='box'
+                    collider='box',
                 )
+
 
     def build_torches(self):
         self.torches = []  # Store all torches in a list
 
         torch_positions = [(0, 0, -5), (9, 0, -5)]
-
-
 
         for pos in torch_positions:
             torch = Entity(
@@ -157,40 +174,140 @@ class Temple(Entity):
             )
             self.torches.append(torch)
 
+        altar_torches_positions = [(3, 0, -23.7), (6, 0, -23.7)]
+        for pos in altar_torches_positions:
+            torch = Entity(
+                parent=self,
+                model='assets/3d_models/temple_torch.glb',
+                scale=3,
+                origin_y=0,
+                position=pos,
+                rotation=(0,180,0)
+            )
+            self.torches.append(torch)
+
     def build_pressure_plates(self):
-        global first_pressure_plate
+        global first_pressure_plate, second_pressure_plate, third_pressure_plate
         first_pressure_plate = Entity(
             parent=self,
             model='cube',
             texture='assets/textures/stone_pressure_plate.jpg',
             scale=(1, 0.2, 1),
             position=(17-temple_length/2, 0.55, -25),
+            collider='box'
+        )
+        second_pressure_plate = Entity(
+            parent=self,
+            model='cube',
+            texture='assets/textures/stone_pressure_plate.jpg',
+            scale=(1, 0.2, 1),
+            position=(17-temple_length/2, 0.7, -23),
+            collider='box'
+        )
+        third_pressure_plate = Entity(
+            parent=self,
+            model='cube',
+            texture='assets/textures/stone_pressure_plate.jpg',
+            scale=(1, 0.2, 1),
+            position=(15, 0.55, -8),
+            collider='box'
+        )
+
+    def build_altar(self):
+        self.altar_floor = Entity(
+            parent=self,
+            model='cube',
+            scale=(6, 0.3, 6),
+            position=(4.5, 0.5, -21),
+            texture='assets/textures/altar_floor_texture.jpg',
+            texture_scale=(3,1),
+            rotation=(0,180,0),
             collider='box',
         )
+        self.altar_back_wall = Entity(
+            parent=self,
+            model='cube',
+            scale=(6, 4, 0.5),
+            position=(4.5, 2.5, -23.9),
+            color = color.white,
+            collider='box',
+            texture='assets/textures/altar_walls_texture.jpg',
+            texture_scale=(3,2)
+        )
+        self.altar_right_wall = Entity(
+            parent=self,
+            model='cube',
+            scale=(0.5, 2, 3),
+            position=(1.25, 1.5, -23),
+            color = color.white,
+            collider='box',
+            texture='assets/textures/altar_walls_texture.jpg',
+            texture_scale=(2, 2)
+        )
+        self.altar_left_wall = Entity(
+            parent=self,
+            model='cube',
+            scale=(0.5, 2, 3),
+            position=(7.75, 1.5, -23),
+            color = color.white,
+            collider='box',
+            texture='assets/textures/altar_walls_texture.jpg',
+            texture_scale=(2, 2)
+        )
+
 
     def check_pressure_plates(self):
         """Check pressure plates separately from main update loop"""
-        global pressed_plates, first_pressure_plate
-
+        global pressed_plates, first_pressure_plate, second_pressure_plate
+        from ui import update_plates_counter
         plate1_distance = (self.player.position - first_pressure_plate.position).length()
-        if plate1_distance < 2 and self.player.y < 1:
+        plate2_distance = (self.player.position - second_pressure_plate.position).length()
+        plate3_distance = (self.player.position - third_pressure_plate.position).length()
+
+        if plate1_distance < 1 and self.player.y < 0.8:
             if not self.plate1_pressed:
                 self.plate1_pressed = True
                 pressed_plates += 1
                 first_pressure_plate.color = color.green
 
-                # Update UI counter immediately
-                from ui import update_plates_counter
                 update_plates_counter(pressed_plates)
+
+        if plate2_distance < 1 and self.player.y < 0.8:
+            if not self.plate2_pressed:
+                self.plate2_pressed = True
+                pressed_plates += 1
+                second_pressure_plate.color = color.green
+
+                update_plates_counter(pressed_plates)
+
+        if plate3_distance < 1 and self.player.y < 0.8:
+            if not self.plate3_pressed:
+                self.plate3_timer += time.dt
+                progress = self.plate3_timer / self.plate3_required_time
+                third_pressure_plate.color = color.rgb(255 * (1 - progress), 255 * progress, 0)
+
+                if self.plate3_timer >= self.plate3_required_time:
+                    self.plate3_pressed = True
+                    pressed_plates += 1
+                    third_pressure_plate.color = color.green
+                    update_plates_counter(pressed_plates)
+        else:
+            if not self.plate3_pressed:
+                self.plate3_timer = 0
+                third_pressure_plate.color = color.white
 
     def update(self):
         global pressed_plates, first_pressure_plate
 
-        if not self.door_closed:
+        if not self.puzzle_solved and not self.door_closed:
             distance = (self.player.position - self.trigger_position).length()
 
             if distance < self.trigger_radius:
                 self.close_door()
+        if self.door_closed and pressed_plates == 3:
+            self.open_door()
+            show_finish_screen()
+            self.puzzle_solved = True
 
         self.fire_timer += time.dt
 
@@ -198,20 +315,20 @@ class Temple(Entity):
             self.fire_timer = 0
 
             for torch in self.torches:
+                z_offset = 0.6 if torch.z < -20 else -1
                 TorchFire(
                     parent=scene,
-                    position=torch.world_position + Vec3(0, 7, -1),
+                    position=torch.world_position + Vec3(0, torch.scale.y + 2, z_offset),
                 )
 
-        self.plate_check_timer += time.dt
-        if self.plate_check_timer > 0.1:
-            self.plate_check_timer = 0
-            self.check_pressure_plates()
+        self.check_pressure_plates()
+
 
         if self.door_closed and not hasattr(self, 'counter_shown'):
             from ui import show_plates_counter
             show_plates_counter(self)
             self.counter_shown = True
+
 
     def close_door(self):
         self.door.y -= self.door_speed * time.dt
@@ -223,3 +340,11 @@ class Temple(Entity):
             from ui import show_door_closed_message
             show_door_closed_message(self)
             print('Usa a coborat complet!')
+
+    def open_door(self):
+        self.door.y += self.door_speed * time.dt
+        if self.door.y >= 8:
+            self.door.y = 8
+            self.door_closed = False
+            print('Usa a urcat complet!')
+
